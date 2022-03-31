@@ -88,7 +88,8 @@ void IncreasePC() {
    	kernel->machine->WriteRegister(NextPCReg, counter + 4);
 }
 
-const int max_length = 32;
+const int max_int_length = 32;
+const int max_str_length = 255;
 
 void
 ExceptionHandler(ExceptionType which)
@@ -113,14 +114,14 @@ ExceptionHandler(ExceptionType which)
 			DEBUG(dbgSys, "Prepare to input the number\n");
 {
 			// Initialize
-			char* buffer = new char[max_length + 1];
+			char* buffer = new char[max_int_length + 1];
 			int size = 0;
 			int new_number = 0;
 			bool is_positive = 0;
 			int i = 0;
 			
 			// Read char array
-			while (size < max_length) {
+			while (size < max_int_length) {
 				char c = kernel->synchConsoleIn->GetChar();
 				if ((c == '\0') or (c == '\n')) 
 					break;
@@ -134,9 +135,9 @@ ExceptionHandler(ExceptionType which)
 
 			if (buffer == NULL) {
 				DEBUG(dbgFile, "Not enought memory in the system");
-				std::cerr << "NNot enought memory in the system\n";
+				std::cerr << "Not enought memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
-				delete file_name;
+				delete buffer;
 				return;
 			}
 
@@ -197,7 +198,7 @@ ExceptionHandler(ExceptionType which)
 			DEBUG(dbgAddr, "Prepare to output the number\n");
 {
 			// Initialize
-			char* buffer = new char[max_length + 1];
+			char* buffer = new char[max_int_length + 1];
 			int size = 0;
 			int number = 0;
 			bool is_positive;
@@ -207,7 +208,7 @@ ExceptionHandler(ExceptionType which)
 				DEBUG(dbgFile, "Not enought memory in the system");
 				std::cerr << "NNot enought memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
-				delete file_name;
+				delete buffer;
 				return;
 			}
 
@@ -259,7 +260,8 @@ ExceptionHandler(ExceptionType which)
 			char* file_name;
 
 			virtual_address = kernel->machine->ReadRegister(4);		
-			file_name = UserToSystem(virtual_address, max_length + 1);
+			file_name = UserToSystem(virtual_address, max_str_length + 1);
+
 
 			if (file_name == NULL) {
 				DEBUG(dbgFile, "Not enought memory in the system");
@@ -291,58 +293,104 @@ ExceptionHandler(ExceptionType which)
 			char* file_name;
 
 			virtual_address = kernel->machine->ReadRegister(4);
-			file_name = UserToSystem(virtual_address, max_length + 1);
+			file_name = UserToSystem(virtual_address, max_str_length + 1);
 
-			OpenFile* file_int = kernel->fileSystem->Open(file_name);
+			OpenFile* p_address = kernel->fileSystem->Open(file_name);
 
 			DEBUG(dbgFile, "Find the file named " << file_name);
 
-			if (file_int == NULL) {
+			if (p_address == NULL) {
 				DEBUG(dbgFile, "\nError in finding the file named " << file_name);
 				std::cerr << "\nError in finding the file named " << file_name << "\n";
 			}
 
 			delete file_name;
-			kernel->machine->WriteRegister(2, (OpenFileId)file_int);
+			kernel->machine->WriteRegister(2, (OpenFileId)p_address);
 			IncreasePC();
 }
 			break;
 
-// 		case SC_Read:
-// 			DEBUG(dbgFile, "Read the data in the file");
-// {
-// 			char* buffer;
-// 			int virtual_address;
-// 			int size;
-// 			int i = 0;
-// 			OpenFileId virtual_id;
+		case SC_Read:
+			DEBUG(dbgFile, "Read the data in the file");
+{
+			char* buffer;
+			int virtual_address;
+			int size;
+			OpenFileId virtual_id;
 
-// 			virtual_address = kernel->machine->ReadRegister(4);
-// 			buffer = UserToSystem(virtual_address, max_length + 1);
-// 			size = kernel->machine->ReadRegister(5);
-// 			virtual_id = kernel->machine->ReadRegister(6);
+			virtual_address = kernel->machine->ReadRegister(4);
+			buffer = UserToSystem(virtual_address, max_str_length + 1);
+			size = kernel->machine->ReadRegister(5);
+			virtual_id = kernel->machine->ReadRegister(6);
 
-// 			if (buffer == NULL) {
-// 				DEBUG(dbgFile, "Not enought memory in the system");
-// 				std::cerr << "NNot enought memory in the system\n";
-// 				kernel->machine->WriteRegister(2, -1);
-// 				delete file_name;
-// 				return;
-// 			}
+			if (buffer == NULL) {
+				DEBUG(dbgFile, "Not enought memory in the system");
+				std::cerr << "Not enought memory in the system\n";
+				kernel->machine->WriteRegister(2, -1);
+				delete buffer;
+				IncreasePC();
+				return;
+			}
 
-// 			OpenFile* p_address = (OpenFile*)virtual_id;
-// 			p_address->Read(buffer, size);
+			if (virtual_id == 1) {
+				DEBUG(dbgFile, "Write only file!");
+				std::cerr << "Write only file!\n";
+				kernel->machine->WriteRegister(2, -1);
+				delete buffer;
+				IncreasePC();
+				return;
+			}
 
-// 			for (; i < size; i++) {
-// 				kernel->machine->ReadMem();
-// 			}
-			
-			
+			OpenFile* p_address = (OpenFile*)virtual_id;
+			int get = p_address->Read(buffer, size);
 
-// 			kernel->machine->WriteRegister(2, 0);
-// 			IncreasePC();
-// }
-// 			break;
+			kernel->machine->WriteRegister(2, get);
+			delete buffer;
+			IncreasePC();
+}
+			break;
+
+		case SC_Write:
+			DEBUG(dbgFile, "Read the data in the file");
+{
+			char* buffer;
+			int virtual_address;
+			int size;
+			OpenFileId virtual_id;
+
+			virtual_address = kernel->machine->ReadRegister(4);
+			buffer = UserToSystem(virtual_address, max_str_length + 1);
+			size = kernel->machine->ReadRegister(5);
+			virtual_id = kernel->machine->ReadRegister(6);
+
+			if (buffer == NULL) {
+				DEBUG(dbgFile, "Not enought memory in the system");
+				std::cerr << "Not enought memory in the system\n";
+				kernel->machine->WriteRegister(2, -1);
+				delete buffer;
+				IncreasePC();
+				return;
+			}
+
+			if (virtual_id == 0) {
+				DEBUG(dbgFile, "Read only file!");
+				std::cerr << "Read only file!\n";
+				kernel->machine->WriteRegister(2, -1);
+				delete buffer;
+				IncreasePC();
+				return;
+			}
+
+			OpenFile* p_address = (OpenFile*)virtual_id;
+			int get = p_address->Write(buffer, size);
+
+			std::cout << buffer << "\n";
+
+			kernel->machine->WriteRegister(2, get);
+			delete buffer;
+			IncreasePC();
+}
+			break;
 
 		case SC_Close:
 			DEBUG(dbgFile, "Close file");
@@ -350,12 +398,13 @@ ExceptionHandler(ExceptionType which)
 			// initialize
 			OpenFileId virtual_id;
 			virtual_id = kernel->machine->ReadRegister(4);
-			
+
 			// get pointer to the address then delete it
 			OpenFile *p_address = (OpenFile*)virtual_id;
-			delete p_address;
 
-			kernel->machine->WriteRegister(2, 0);
+			p_address = NULL;
+			delete p_address;
+			kernel->machine->WriteRegister(2, 1);
 			IncreasePC();
 }
 			break;
