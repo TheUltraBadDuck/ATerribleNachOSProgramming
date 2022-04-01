@@ -215,6 +215,14 @@ ExceptionHandler(ExceptionType which)
 			// Get number
 			number = kernel->machine->ReadRegister(4);
 
+			if (number == 0) {
+				kernel->synchConsoleOut->PutChar('0');
+				delete buffer;
+				kernel->machine->WriteRegister(2, 0);
+				IncreasePC();
+				return;
+			}
+
 			// Get negative number
 			if (number < 0) {
 				is_positive = false;
@@ -262,7 +270,6 @@ ExceptionHandler(ExceptionType which)
 			virtual_address = kernel->machine->ReadRegister(4);		
 			file_name = UserToSystem(virtual_address, max_str_length + 1);
 
-
 			if (file_name == NULL) {
 				DEBUG(dbgFile, "Not enought memory in the system");
 				std::cerr << "NNot enought memory in the system\n";
@@ -301,7 +308,7 @@ ExceptionHandler(ExceptionType which)
 
 			if (p_address == NULL) {
 				DEBUG(dbgFile, "\nError in finding the file named " << file_name);
-				std::cerr << "\nError in finding the file named " << file_name << "\n";
+				std::cerr << "Error in finding the file named " << file_name << "\n";
 			}
 
 			delete file_name;
@@ -313,16 +320,22 @@ ExceptionHandler(ExceptionType which)
 		case SC_Read:
 			DEBUG(dbgFile, "Read the data in the file");
 {
+			// initialize
 			char* buffer;
 			int virtual_address;
 			int size;
 			OpenFileId virtual_id;
 
+			// from int Read(char *buffer, int size, OpenFileId id);
+			// virtual adderss = (int)buffer
+			// size
+			// virtual id = id
 			virtual_address = kernel->machine->ReadRegister(4);
 			buffer = UserToSystem(virtual_address, max_str_length + 1);
 			size = kernel->machine->ReadRegister(5);
 			virtual_id = kernel->machine->ReadRegister(6);
 
+			// lack of memory
 			if (buffer == NULL) {
 				DEBUG(dbgFile, "Not enought memory in the system");
 				std::cerr << "Not enought memory in the system\n";
@@ -332,6 +345,19 @@ ExceptionHandler(ExceptionType which)
 				return;
 			}
 
+			// start reading
+			OpenFile* p_address = (OpenFile*)virtual_id;
+
+			if (p_address == NULL) {
+				DEBUG(dbgFile, "The file does not exist");
+				std::cerr << "The file does not exist\n";
+				kernel->machine->WriteRegister(2, -1);
+				delete buffer;
+				IncreasePC();
+				return;
+			}
+
+			// touch the write-only file
 			if (virtual_id == 1) {
 				DEBUG(dbgFile, "Write only file!");
 				std::cerr << "Write only file!\n";
@@ -340,10 +366,9 @@ ExceptionHandler(ExceptionType which)
 				IncreasePC();
 				return;
 			}
-
-			OpenFile* p_address = (OpenFile*)virtual_id;
 			int get = p_address->Read(buffer, size);
 
+			SystemToUser(virtual_address, get, buffer);
 			kernel->machine->WriteRegister(2, get);
 			delete buffer;
 			IncreasePC();
@@ -353,16 +378,22 @@ ExceptionHandler(ExceptionType which)
 		case SC_Write:
 			DEBUG(dbgFile, "Read the data in the file");
 {
+			// initialize
 			char* buffer;
 			int virtual_address;
 			int size;
 			OpenFileId virtual_id;
 
+			// from int Write(char *buffer, int size, OpenFileId id);
+			// virtual adderss = (int)buffer
+			// size
+			// virtual id = id
 			virtual_address = kernel->machine->ReadRegister(4);
 			buffer = UserToSystem(virtual_address, max_str_length + 1);
 			size = kernel->machine->ReadRegister(5);
 			virtual_id = kernel->machine->ReadRegister(6);
 
+			// lack of memory
 			if (buffer == NULL) {
 				DEBUG(dbgFile, "Not enought memory in the system");
 				std::cerr << "Not enought memory in the system\n";
@@ -372,6 +403,18 @@ ExceptionHandler(ExceptionType which)
 				return;
 			}
 
+			// start writing
+			OpenFile* p_address = (OpenFile*)virtual_id;
+			if (p_address == NULL) {
+				DEBUG(dbgFile, "The file does not exist");
+				std::cerr << "The file does not exist\n";
+				kernel->machine->WriteRegister(2, -1);
+				delete buffer;
+				IncreasePC();
+				return;
+			}
+
+			// touch the read-only file
 			if (virtual_id == 0) {
 				DEBUG(dbgFile, "Read only file!");
 				std::cerr << "Read only file!\n";
@@ -381,16 +424,41 @@ ExceptionHandler(ExceptionType which)
 				return;
 			}
 
-			OpenFile* p_address = (OpenFile*)virtual_id;
 			int get = p_address->Write(buffer, size);
 
-			std::cout << buffer << "\n";
-
+			SystemToUser(virtual_address, get, buffer);
 			kernel->machine->WriteRegister(2, get);
 			delete buffer;
 			IncreasePC();
 }
 			break;
+
+// 		case SC_Seek:
+// 			DEBUG(dbgFile, "Seek the position of the file");
+// {
+// 			// initialize
+// 			int position;
+// 			OpenFileId virtual_id;
+
+// 			// from int Seek(int position, OpenFileId id);
+// 			// position
+// 			// virtual id = id
+// 			position = kernel->machine->ReadRegister(4);
+// 			virtual_id = kernel->machine->ReadRegister(5);
+
+// 			// Start seeking
+// 			OpenFile* p_address = (OpenFile*)virtual_id;
+// 			if (position == -1) {
+// 				Lseek(virtual_id, position, max_str_length);
+// 			}
+// 			else {
+// 				Lseek(virtual_id, position, 0);
+// 			}
+
+// 			kernel->machine->WriteRegister(2, 0);
+// 			IncreasePC();
+// }
+// 			break;
 
 		case SC_Close:
 			DEBUG(dbgFile, "Close file");
@@ -402,9 +470,22 @@ ExceptionHandler(ExceptionType which)
 			// get pointer to the address then delete it
 			OpenFile *p_address = (OpenFile*)virtual_id;
 
-			p_address = NULL;
-			delete p_address;
-			kernel->machine->WriteRegister(2, 1);
+			// Problem here: p_address should have NULL value, but this one gets a deleted address instead
+			// So you can see: delete p_address is after p_address = NULL (this is wrong)
+			// I have no idea how to fix this thing!
+
+			if (p_address != NULL) {
+				p_address = NULL;
+				delete p_address;
+				kernel->machine->WriteRegister(2, 0);
+			}
+			else {
+				DEBUG(dbgFile, "Close the unexisted file");
+				std::cerr << "Close the unexisted file\n";
+				kernel->machine->WriteRegister(2, -1);
+			}
+
+
 			IncreasePC();
 }
 			break;
