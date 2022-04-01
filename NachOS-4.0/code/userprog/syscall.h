@@ -37,6 +37,10 @@
 
 #define SC_ReadNum  16
 #define SC_PrintNum 17
+#define SC_ReadChar 18
+#define SC_PrintChar 19
+#define SC_ReadString 20
+#defince SC_PrintString 21
 
 #define SC_Add		42
 
@@ -179,6 +183,10 @@ void ThreadExit(int ExitCode);
 
 int ReadNum();
 void PrintNum(int number);
+char ReadChar();
+void PrintChar(char character);
+void ReadString(char buffer[], int length);
+void PrintString(char buffer[]);
 
 #endif /* IN_ASM */
 
