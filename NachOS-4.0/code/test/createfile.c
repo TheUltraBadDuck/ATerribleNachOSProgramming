@@ -4,6 +4,7 @@
 int main() {
     OpenFileId i;
     OpenFileId j;
+    
     if (Create("wow.txt") == -1) {
         PrintNum(100);
     }
@@ -21,23 +22,9 @@ int main() {
 //    PrintNum(i);
 //    PrintNum(j);
 
-    if (Close(i) != 1) {
-        PrintNum(0);
-    }
-    else {
-        PrintNum(1);
-    }
-    if (Close(j) != 1) {
-        PrintNum(0);
-    }
-    else {
-        PrintNum(1);
-    }
-    if (Close(j) != 1) {
-        PrintNum(0);
-    }
-    else {
-        PrintNum(1);
-    }
+    PrintNum(Close(i));
+    PrintNum(Close(i));
+    PrintNum(Close(j));
+    PrintNum(Close(j));
     Halt();
 }

@@ -11,11 +11,12 @@ int main() {
     int size;
     int real_size;
 
-    i = Open("wow2.txt");
+    i = Open("wow.txt");
     size = 68;
-    string_copy(l, "Hello, do you understand anything about the OS?\nNo, right? Me, too!", buffer, 68);
 
-    real_size = Write(buffer, size, i);
+    real_size = Read(buffer, size, i);
+
+    Write(buffer, real_size, i);
 
     Close(i);
     Halt();
