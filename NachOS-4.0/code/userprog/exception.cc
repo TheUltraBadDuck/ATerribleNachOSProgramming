@@ -295,6 +295,20 @@ ExceptionHandler(ExceptionType which)
 		IncreasePC();
 		break;
 }
+			
+			case SC_RandomNum:
+		DEBUG(dbgAddr, "Prepare to output the random number \n");
+{
+		srand(time(NULL));
+		int randomNumber;
+		randomNumber = rand()% RAND_MAX + 1;
+		kernel->machine->WriteRegister(2, randomNumber);
+
+		IncreasePC();
+
+		break;
+}
+
 
 
 		case SC_Create:
