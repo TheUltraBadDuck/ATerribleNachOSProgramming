@@ -111,8 +111,8 @@ ExceptionHandler(ExceptionType which)
 			break;
 
 		case SC_ReadNum:
-			DEBUG(dbgSys, "Prepare to input the number\n");
 {
+			DEBUG(dbgSys, "Prepare to input the number\n");
 			// Initialize
 			char* buffer = new char[max_int_length + 1];
 			int size = 0;
@@ -189,14 +189,14 @@ ExceptionHandler(ExceptionType which)
 
 			delete buffer;
 			kernel->machine->WriteRegister(2, new_number);
-}
 			IncreasePC();
 			break;
+}
 
 		case SC_PrintNum:
-
-			DEBUG(dbgAddr, "Prepare to output the number\n");
 {
+			DEBUG(dbgAddr, "Prepare to output the number\n");
+
 			// Initialize
 			char* buffer = new char[max_int_length + 1];
 			int size = 0;
@@ -256,14 +256,14 @@ ExceptionHandler(ExceptionType which)
 			}
 
 			delete buffer;
-}
 			kernel->machine->WriteRegister(2, 0);
 			IncreasePC();
 			break;
+}
 
 		case SC_ReadChar:
-			DEBUG(dbgSys, "Prepare to input the character\n");
 {
+			DEBUG(dbgSys, "Prepare to input the character\n");
 			char* buffer = new char[max_str_length + 1];
 			char c = 0;
 			int size = 0;
@@ -314,8 +314,8 @@ ExceptionHandler(ExceptionType which)
 }
 
 		case SC_Create:
-			DEBUG(dbgFile, "Create a new file");
-{			
+{
+			DEBUG(dbgFile, "Create a new file");		
 			int virtual_address;
 			char* file_name;
 
@@ -327,6 +327,7 @@ ExceptionHandler(ExceptionType which)
 				std::cerr << "NNot enought memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
 				delete file_name;
+				IncreasePC();
 				return;
 			}
 
@@ -336,18 +337,19 @@ ExceptionHandler(ExceptionType which)
 				std::cerr << "Error create file " << file_name << "\n";
 				kernel->machine->WriteRegister(2, -1);
 				delete file_name;
+				IncreasePC();
 				return;
 			}
 
 			kernel->machine->WriteRegister(2, 0);
 			IncreasePC();
 			delete file_name;
-}
 			break;
+}
 
 		case SC_Open:
-			DEBUG(dbgFile, "Open file");
 {
+			DEBUG(dbgFile, "Open file");
 			int virtual_address;
 			char* file_name;
 
@@ -366,12 +368,12 @@ ExceptionHandler(ExceptionType which)
 			delete file_name;
 			kernel->machine->WriteRegister(2, (OpenFileId)p_address);
 			IncreasePC();
-}
 			break;
+}
 
 		case SC_Read:
-			DEBUG(dbgFile, "Read the data in the file");
 {
+			DEBUG(dbgFile, "Read the data in the file");
 			// initialize
 			char* buffer;
 			int virtual_address;
@@ -424,12 +426,12 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(2, get);
 			delete buffer;
 			IncreasePC();
-}
 			break;
+}
 
 		case SC_Write:
-			DEBUG(dbgFile, "Read the data in the file");
 {
+			DEBUG(dbgFile, "Read the data in the file");
 			// initialize
 			char* buffer;
 			int virtual_address;
@@ -482,8 +484,8 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(2, get);
 			delete buffer;
 			IncreasePC();
-}
 			break;
+}
 
 // 		case SC_Seek:
 // 			DEBUG(dbgFile, "Seek the position of the file");
@@ -513,8 +515,8 @@ ExceptionHandler(ExceptionType which)
 // 			break;
 
 		case SC_Close:
-			DEBUG(dbgFile, "Close file");
 {
+			DEBUG(dbgFile, "Close file");
 			// initialize
 			OpenFileId virtual_id;
 			virtual_id = kernel->machine->ReadRegister(4);
@@ -536,11 +538,64 @@ ExceptionHandler(ExceptionType which)
 				std::cerr << "Close the unexisted file\n";
 				kernel->machine->WriteRegister(2, -1);
 			}
-
-
 			IncreasePC();
-}
 			break;
+}
+
+		case SC_Remove:
+{
+			DEBUG(dbgFile, "Delete a file");		
+			int virtual_address;
+			char* file_name;
+
+			virtual_address = kernel->machine->ReadRegister(4);		
+			file_name = UserToSystem(virtual_address, max_str_length + 1);
+
+			if (file_name == NULL) {
+				DEBUG(dbgFile, "Not enought memory in the system");
+				std::cerr << "NNot enought memory in the system\n";
+				kernel->machine->WriteRegister(2, -1);
+				IncreasePC();
+				delete file_name;
+				return;
+			}
+
+			// Check existed file by opening it
+			// The file can be opened more than once, so this is OK
+			// The purpose of this is to delete the address (if the file is open)
+			OpenFile* p_address = kernel->fileSystem->Open(file_name);
+
+			if (p_address == NULL) {
+				DEBUG(dbgFile, "Non-existed file " << file_name);
+				std::cerr << "Non-existed file " << file_name << "\n";
+				kernel->machine->WriteRegister(2, -1);
+				IncreasePC();
+				delete file_name;
+				return;
+			}
+
+			if (not kernel->fileSystem->Remove(file_name)) {
+				DEBUG(dbgFile, "Error deleting file " << file_name);
+				std::cerr << "Error deleting file " << file_name << "\n";
+				kernel->machine->WriteRegister(2, -1);
+				IncreasePC();
+				delete file_name;
+				if (p_address != NULL) {
+					p_address = NULL;	// I know this is a wrong syntax!
+					delete p_address;	// See SC_Remove for understanding why
+				}
+				return;
+			}
+
+			kernel->machine->WriteRegister(2, 0);
+			IncreasePC();
+			delete file_name;
+			if (p_address != NULL) {
+				p_address = NULL;
+				delete p_address;
+			}
+			break;
+}
 
     	case SC_Add:
 			DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
