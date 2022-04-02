@@ -260,6 +260,42 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(2, 0);
 			IncreasePC();
 			break;
+			
+				case SC_ReadChar:
+			DEBUG(dbgSys, "Prepare to input the character\n");
+{
+			char c = '/0';
+			int check = 0;
+			do
+			{
+				if (c == '\n' || c == '\r')
+				{
+					break;
+				}
+				check++;
+				c = kernel->synchConsoleIn->GetChar();
+			} while (true);
+
+			if(check > 2){
+				cout << "ERROR!!! Just input one character from keyboard" << endl;
+			}
+
+			kernel->machine->WriteRegister(2,c);
+			IncreasePC();
+			break;
+
+}
+			
+			
+		case SC_PrintChar:
+		DEBUG(dbgAddr, "Prepare to output the character\n");
+{
+		char c = kernel->machine->ReadRegister(4);
+		kernel->synchConsoleOut->PutChar(c);
+		IncreasePC();
+		break;
+}
+
 
 		case SC_Create:
 			DEBUG(dbgFile, "Create a new file");
