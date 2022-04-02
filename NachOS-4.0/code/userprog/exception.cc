@@ -260,56 +260,58 @@ ExceptionHandler(ExceptionType which)
 			kernel->machine->WriteRegister(2, 0);
 			IncreasePC();
 			break;
-			
-				case SC_ReadChar:
+
+		case SC_ReadChar:
 			DEBUG(dbgSys, "Prepare to input the character\n");
 {
-			char c = '/0';
-			int check = 0;
-			do
-			{
-				if (c == '\n' || c == '\r')
-				{
-					break;
-				}
-				check++;
+			char* buffer = new char[max_str_length + 1];
+			char c = 0;
+			int size = 0;
+			while (true) {
 				c = kernel->synchConsoleIn->GetChar();
-			} while (true);
-
-			if(check > 2){
-				cout << "ERROR!!! Just input one character from keyboard" << endl;
+				if ((c == '\0') or (c == '\n')) 
+					break;
+				else if ((c == '\t') and (size > 0)) {
+					buffer[size--] = 0;
+				}
+				else {
+					buffer[size++] = c;
+				}
 			}
 
-			kernel->machine->WriteRegister(2,c);
+			if(size >= 2) {
+				std::cerr << "Just input one character from the keyboard\n";
+			}
+
+			c = buffer[0];
+
+			if ((c == '\0') or (c == '\n')) {
+				std::cerr << "No character were input\n";
+			}
+
+			kernel->machine->WriteRegister(2, c);
 			IncreasePC();
 			break;
-
 }
-			
-			
+
 		case SC_PrintChar:
-		DEBUG(dbgAddr, "Prepare to output the character\n");
 {
-		char c = kernel->machine->ReadRegister(4);
-		kernel->synchConsoleOut->PutChar(c);
-		IncreasePC();
-		break;
-}
-			
-			case SC_RandomNum:
-		DEBUG(dbgAddr, "Prepare to output the random number \n");
-{
-		srand(time(NULL));
-		int randomNumber;
-		randomNumber = rand()% RAND_MAX + 1;
-		kernel->machine->WriteRegister(2, randomNumber);
-
-		IncreasePC();
-
-		break;
+			DEBUG(dbgAddr, "Prepare to output the character\n");
+			char c = kernel->machine->ReadRegister(4);
+			kernel->synchConsoleOut->PutChar(c);
+			IncreasePC();
+			break;
 }
 
-
+		case SC_RandomNum:
+{
+			DEBUG(dbgAddr, "Prepare to output the random number \n");
+			int randomNumber;
+			randomNumber = RandomNumber();
+			kernel->machine->WriteRegister(2, randomNumber);
+			IncreasePC();
+			break;
+}
 
 		case SC_Create:
 			DEBUG(dbgFile, "Create a new file");
