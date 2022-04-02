@@ -38,9 +38,11 @@
 #define SC_ReadNum  16
 #define SC_PrintNum 17
 #define SC_ReadChar 18
-#define SC_PrintChar 19
-#define SC_ReadString 20
-#defince SC_PrintString 21
+#define SC_PrintChar    19
+#define SC_ReadString   20
+#define SC_PrintString  21
+#define SC_RandomNum    22
+
 
 #define SC_Add		42
 
@@ -185,6 +187,7 @@ int ReadNum();
 void PrintNum(int number);
 char ReadChar();
 void PrintChar(char character);
+int RandomNum();
 void ReadString(char buffer[], int length);
 void PrintString(char buffer[]);
 

@@ -31,7 +31,7 @@ main()
 
     /* first initialize the array, in reverse sorted order */
     for (i = 0; i < SIZE; i++) {
-        A[i] = (SIZE-1) - i;
+        A[i] = (SIZE - 1) - i;
     }
 
     /* then sort! */
@@ -46,7 +46,7 @@ main()
     }
 
 #ifdef UNIX_DEBUG
-    for (i=0; i<SIZE; i++) {
+    for (i = 0; i < SIZE; i++) {
         printf("%4d ", A[i]);
 	if (((i+1) % 15) == 0) {
 		printf("\n");
@@ -57,6 +57,21 @@ main()
         }   
     }
     printf("\n");
+#else
+    for (i = 0; i < SIZE; i++) {
+        PrintNum(A[i]);
+        PrintChar(' ');
+        if (((i + 1) % 15) == 0)
+            PrintChar('\n');
+        if (A[i] != i) {
+            PrintString("Out of order A[");
+            PrintNum(i);
+            PrintString("] = ");
+            PrintNum(A[i]);
+            PrintString("\n");
+        }
+    }
+
 #endif /* UNIX_DEBUG */
 
     for (i=0; i<SIZE; i++) {
