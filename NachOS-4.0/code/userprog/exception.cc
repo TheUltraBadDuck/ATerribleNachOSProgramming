@@ -502,6 +502,7 @@ ExceptionHandler(ExceptionType which)
 				return;
 			}
 			int get = p_address->Read(buffer, size);
+//			buffer[get] = 0;
 
 			SystemToUser(virtual_address, get, buffer);
 			kernel->machine->WriteRegister(2, get);
