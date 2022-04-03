@@ -112,7 +112,7 @@ ifeq ($(hosttype),unknown)
 PROGRAMS = unknownhost
 else
 # change this if you create a new test program!
-PROGRAMS = add halt shell matmult sort huh createfile raw help cat copy
+PROGRAMS = add halt shell matmult sort createfile help cat copy ascii delete
 endif
 
 all: $(PROGRAMS)
@@ -157,23 +157,11 @@ matmult: matmult.o start.o
 	$(LD) $(LDFLAGS) start.o matmult.o -o matmult.coff
 	$(COFF2NOFF) matmult.coff matmult
 
-huh.o: huh.c
-	$(CC) $(CFLAGS) -c huh.c
-huh: huh.o start.o
-	$(LD) $(LDFLAGS) start.o huh.o -o huh.coff
-	$(COFF2NOFF) huh.coff huh
-
 createfile.o: createfile.c
 	$(CC) $(CFLAGS) -c createfile.c
 createfile: createfile.o start.o
 	$(LD) $(LDFLAGS) start.o createfile.o -o createfile.coff
 	$(COFF2NOFF) createfile.coff createfile
-
-raw.o: raw.c
-	$(CC) $(CFLAGS) -c raw.c
-raw: raw.o start.o
-	$(LD) $(LDFLAGS) start.o raw.o -o raw.coff
-	$(COFF2NOFF) raw.coff raw
 
 help.o: help.c
 	$(CC) $(CFLAGS) -c help.c
@@ -198,6 +186,12 @@ copy.o: copy.c
 copy: copy.o start.o
 	$(LD) $(LDFLAGS) start.o copy.o -o copy.coff
 	$(COFF2NOFF) copy.coff copy
+
+delete.o: delete.c
+	$(CC) $(CFLAGS) -c delete.c
+delete: delete.o start.o
+	$(LD) $(LDFLAGS) start.o delete.o -o delete.coff
+	$(COFF2NOFF) delete.coff delete
 
 clean:
 	$(RM) -f *.o *.ii

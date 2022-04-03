@@ -12,6 +12,9 @@ int main() {
     j = Open("to.txt");
     size = 68;
 
+    PrintString("Check from.txt and to.txt, then input any key to continue\n");
+    ReadChar();
+
     real_size = Read(buffer, size, i);
     Write(buffer, real_size, j);
 

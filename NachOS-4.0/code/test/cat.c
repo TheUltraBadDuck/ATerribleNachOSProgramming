@@ -6,14 +6,14 @@ int main() {
 
     int l;
     OpenFileId id;
-    //PrintString("Input file name: ");
-    //ReadString(file_name, size);
     size = 68;
 
-    id = Open("wow.txt");
+    id = Open("exist.txt");
 
     Read(buffer, size, id);
-    //PrintString(file_name_size);
+    PrintString("Data from exist.txt: ");
+    PrintString(buffer);
+    PrintChar('\n');
 
     Close(id);
     Halt();

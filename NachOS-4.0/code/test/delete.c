@@ -2,38 +2,48 @@
 
 
 int main() {
-    if (Create("streich.bin") == -1) {
-        //PrintString("Error create file\n");
-        PrintNum(111);
+    
+    char buffer[255];
+    int size;
+
+    PrintString("Input file name: ");
+    ReadString(buffer, size);
+
+    if (Create(buffer) == -1) {
+        PrintString("Error create file ");
+        PrintString(buffer);
+        PrintChar('\n');
         Halt();
         return;
     }
 
-    //PrintString("See the file streich.bin\n");
-    //PrintString("Input anything to continue: ");
-    PrintChar(':');
-    ReadNum();
+    PrintString("See the file ");
+    PrintString(buffer);
+    PrintString(" First\n");
+    PrintString("Input anything to continue: ");
+    ReadChar();
 
-    //Open("streich.bin");
+    Open(buffer);
 
-    if (Remove("streich.bin") == -1) {
-        //PrintString("Error deleting file\n");
-        PrintNum(222);
+    if (Remove(buffer) == -1) {
+        PrintString("Error remove once file ");
+        PrintString(buffer);
+        PrintChar('\n');
         Halt();
         return;
     }
 
-    PrintChar(':');
-    ReadNum();
-
-    if (Remove("streich.bin") == -1) {
-        //PrintString("Error deleting file\n");
-        PrintNum(333);
+    if (Remove(buffer) == -1) {
+        PrintString("Error remove twice file ");
+        PrintString(buffer);
+        PrintChar('\n');
         Halt();
         return;
     }
     
-    //PrintString("Successfully delete file streich.bin");
+    PrintString("Successfully delete file ");
+    PrintString(buffer);
+    PrintChar('\n');
 
     Halt();
 }
