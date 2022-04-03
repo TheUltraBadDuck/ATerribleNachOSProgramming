@@ -3,7 +3,7 @@
 
 Currently the project is done mostly for the project in my university.
 You can see some of the detail in the code and even use it (just
-do not copy completely if you do not understand, and you know, plagilarism)
+do not copy completely if you do not understand, and you know, plagiarism)
 
 This site is for ones who have contacted NachOS for a long time.
 
