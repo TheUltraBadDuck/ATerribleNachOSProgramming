@@ -134,8 +134,8 @@ ExceptionHandler(ExceptionType which)
 			}
 
 			if (buffer == NULL) {
-				DEBUG(dbgFile, "Not enought memory in the system");
-				std::cerr << "Not enought memory in the system\n";
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
 				delete buffer;
 				return;
@@ -150,7 +150,7 @@ ExceptionHandler(ExceptionType which)
 					DEBUG(dbgAddr, "Invalid number\n");
 					std::cerr << "\nInvalid number\n";
 					delete buffer;
-					kernel->machine->WriteRegister(2, 0);
+					kernel->machine->WriteRegister(2, -1);
 					IncreasePC();
 					return;
 				}
@@ -205,8 +205,8 @@ ExceptionHandler(ExceptionType which)
 			int i = 0;
 
 			if (buffer == NULL) {
-				DEBUG(dbgFile, "Not enought memory in the system");
-				std::cerr << "NNot enought memory in the system\n";
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
 				delete buffer;
 				return;
@@ -267,6 +267,15 @@ ExceptionHandler(ExceptionType which)
 			char* buffer = new char[max_str_length + 1];
 			char c = 0;
 			int size = 0;
+
+			if (buffer == NULL) {
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
+				kernel->machine->WriteRegister(2, -1);
+				delete buffer;
+				return;
+			}
+
 			while (true) {
 				c = kernel->synchConsoleIn->GetChar();
 				if ((c == '\0') or (c == '\n')) 
@@ -313,6 +322,78 @@ ExceptionHandler(ExceptionType which)
 			break;
 }
 
+		case SC_ReadString:
+{
+			DEBUG(dbgAddr, "Prepare to input the string");
+
+			// initialize
+			int virtual_address, length;
+			char* buffer;
+
+			virtual_address = kernel->machine->ReadRegister(4);
+			length = kernel->machine->ReadRegister(5);
+			buffer = UserToSystem(virtual_address, length);
+
+			if (buffer == NULL) {
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
+				delete buffer;
+				return;
+			}
+
+			// Read char array
+			while (length < max_str_length) {
+				char c = kernel->synchConsoleIn->GetChar();
+				if ((c == '\0') or (c == '\n')) 
+					break;
+				else if ((c == '\t') and (length > 0)) {
+					buffer[length--] = 0;
+				}
+				else {
+					buffer[length++] = c;
+				}
+			}
+
+			SystemToUser(virtual_address, length, buffer);
+
+			delete buffer;
+			IncreasePC();
+			break;
+}
+
+		case SC_PrintString:
+{
+			DEBUG(dbgAddr, "Prepare to output string");
+			
+			// initialize
+			int virtual_address, length;
+			char* buffer;
+
+			virtual_address = kernel->machine->ReadRegister(4);
+			buffer = UserToSystem(virtual_address, max_str_length + 1);
+			length = 0;
+
+			if (buffer == NULL) {
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
+				delete buffer;
+				return;
+			}
+
+			// Get buffer size
+			while (buffer[length] != 0)
+				length++;
+
+			// Print the string
+			for (int i = 0; i < length; i++) {
+				kernel->synchConsoleOut->PutChar(buffer[i]);
+			}
+
+			delete buffer;
+			IncreasePC();
+			break;
+}
+
 		case SC_Create:
 {
 			DEBUG(dbgFile, "Create a new file");		
@@ -323,8 +404,8 @@ ExceptionHandler(ExceptionType which)
 			file_name = UserToSystem(virtual_address, max_str_length + 1);
 
 			if (file_name == NULL) {
-				DEBUG(dbgFile, "Not enought memory in the system");
-				std::cerr << "NNot enought memory in the system\n";
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
 				delete file_name;
 				IncreasePC();
@@ -391,8 +472,8 @@ ExceptionHandler(ExceptionType which)
 
 			// lack of memory
 			if (buffer == NULL) {
-				DEBUG(dbgFile, "Not enought memory in the system");
-				std::cerr << "Not enought memory in the system\n";
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
 				delete buffer;
 				IncreasePC();
@@ -449,8 +530,8 @@ ExceptionHandler(ExceptionType which)
 
 			// lack of memory
 			if (buffer == NULL) {
-				DEBUG(dbgFile, "Not enought memory in the system");
-				std::cerr << "Not enought memory in the system\n";
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
 				delete buffer;
 				IncreasePC();
@@ -552,8 +633,8 @@ ExceptionHandler(ExceptionType which)
 			file_name = UserToSystem(virtual_address, max_str_length + 1);
 
 			if (file_name == NULL) {
-				DEBUG(dbgFile, "Not enought memory in the system");
-				std::cerr << "NNot enought memory in the system\n";
+				DEBUG(dbgFile, "Not enough memory in the system");
+				std::cerr << "Not enough memory in the system\n";
 				kernel->machine->WriteRegister(2, -1);
 				IncreasePC();
 				delete file_name;
