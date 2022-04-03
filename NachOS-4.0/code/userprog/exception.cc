@@ -263,10 +263,12 @@ ExceptionHandler(ExceptionType which)
 
 		case SC_ReadChar:
 {
+			// Initialize
 			DEBUG(dbgSys, "Prepare to input the character\n");
 			char* buffer = new char[max_str_length + 1];
 			char c = 0;
 			int size = 0;
+			//get character from keyboard
 			while (true) {
 				c = kernel->synchConsoleIn->GetChar();
 				if ((c == '\0') or (c == '\n')) 
@@ -278,13 +280,13 @@ ExceptionHandler(ExceptionType which)
 					buffer[size++] = c;
 				}
 			}
-
+			//Check if more than 2 charater cout error
 			if(size >= 2) {
 				std::cerr << "Just input one character from the keyboard\n";
 			}
 
 			c = buffer[0];
-
+			//check if no character were input
 			if ((c == '\0') or (c == '\n')) {
 				std::cerr << "No character were input\n";
 			}
@@ -307,6 +309,7 @@ ExceptionHandler(ExceptionType which)
 {
 			DEBUG(dbgAddr, "Prepare to output the random number \n");
 			int randomNumber;
+			//get random number from RandomNumber()
 			randomNumber = RandomNumber();
 			kernel->machine->WriteRegister(2, randomNumber);
 			IncreasePC();
